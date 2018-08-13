@@ -20,7 +20,7 @@ class LoginScreen extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.textBig}>Login to HoHoHo!</Text>
+        <Text style={styles.textBig}>Welcome to LongShot!</Text>
         <TouchableOpacity onPress={ () => {this.press()} } style={[styles.button, styles.buttonGreen]}>
           <Text style={styles.buttonLabel}>Tap to Login</Text>
         </TouchableOpacity>
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#adad85',
   },
   containerFull: {
     flex: 1,
@@ -351,6 +351,7 @@ const styles = StyleSheet.create({
     fontSize: 36,
     textAlign: 'center',
     margin: 10,
+    color: '#7300e6',
   },
   button: {
     alignSelf: 'stretch',
