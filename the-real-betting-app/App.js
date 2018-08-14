@@ -1,10 +1,11 @@
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, ListView, Alert, Button } from 'react-native';
 import { StackNavigator } from 'react-navigation';
-
+import io from 'socket.io-client';
+const socket = io('https://2b3f7497.ngrok.io');
 
 //Screens
-class LoginScreen extends React.Component {
+class WelcomeScreen extends React.Component {
   static navigationOptions = {
     title: 'Welcome',
   };
@@ -33,11 +34,11 @@ class LoginScreen extends React.Component {
 }
 
 class RegisterScreen extends React.Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
     this.state = {
       username: '',
-      password: ''
+      password: '',
     }
   }
 
@@ -47,54 +48,46 @@ class RegisterScreen extends React.Component {
 
 
   submitInfo() {
-    fetch('https://hohoho-backend.herokuapp.com/register/', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username: this.state.username,
-        password: this.state.password,
-      })
-    })
-    .then((response) => {
-      return response.json()})
-    .then((responseJson) => {
-      if (responseJson.success) {
+    console.log('before emit')
+    socket.emit('register', JSON.stringify({
+      Username: this.state.username,
+      Password: this.state.password,
+    }) )
+    console.log('after emit')
+
+    socket.on('registerSuccess', (data)=>{
+      if(data.success){
         alert('Registration Successful!')
         this.props.navigation.navigate('Welcome')
-      } else {
-        alert('Invalid information')
       }
     })
-    .catch((err) => {
-      alert('Error: ', err)
-    });
   }
 
   render() {
     return (
       <View style={styles.container}>
-      <View>
-        <Text style={styles.textBig}>Register</Text>
+        <View>
+          <Text style={styles.textBig}>Register</Text>
+        </View>
+        <TouchableOpacity>
+          <TextInput
+            style={{height: 40, borderWidth: 1, width: 300, margin: 10, padding: 5}}
+            placeholder="Enter your username"
+            onChangeText={(text) => this.setState({username: text})}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <TextInput
+            style={{height: 40, borderWidth: 1, width: 300, margin: 10, padding: 5}}
+            secureTextEntry={true}
+            placeholder="Enter your password"
+            onChangeText={(text) => this.setState({password: text})}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, styles.buttonRed]} onPress={() => {this.submitInfo()}}>
+          <Text style={styles.buttonLabel}>Register</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity>
-      <TextInput
-        style={{height: 40, borderWidth: 1, width: 300, margin: 10, padding: 5}}
-        placeholder="Enter your username"
-        onChangeText={(text) => this.setState({username: text})}
-      />
-      <TextInput
-        style={{height: 40, borderWidth: 1, width: 300, margin: 10, padding: 5}}
-        secureTextEntry={true}
-        placeholder="Enter your password"
-        onChangeText={(text) => this.setState({password: text})}
-      />
-    </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, styles.buttonRed]} onPress={() => {this.submitInfo()}}>
-        <Text style={styles.buttonLabel}>Register</Text>
-      </TouchableOpacity>
-    </View>
     )
   }
 }
@@ -104,7 +97,7 @@ class Login extends React.Component {
     super()
     this.state = {
       username: '',
-      password: ''
+      password: '',
     }
   }
 
@@ -114,50 +107,45 @@ class Login extends React.Component {
 
 
   submitInfo() {
-    fetch('https://hohoho-backend.herokuapp.com/login/', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username: 'theValueOfTheUsernameState',
-        password: 'theValueOfThePasswordState',
-      })
+    console.log('before emit')
+    socket.emit('login', JSON.stringify({
+      Username: this.state.username,
+      Password: this.state.password,
+    }) )
+    console.log('after emit')
+
+    socket.on('errMsg', (data)=>{
+      alert(data.msg)
     })
-    .then((response) => response.json())
-    .then((responseJson) => {
-      if (responseJson.success){
-        this.props.navigation.navigate('UserList')
-      }
+    socket.on('loginSuccess', (data)=>{
+      alert('Login Successful!')
+      this.props.navigation.navigate('UserList')
     })
-    .catch((err) => {
-      alert('Error: ', err)
-    });
   }
 
   render() {
     return (
       <View style={styles.container}>
-      <View>
-        <Text style={styles.textBig}>Welcome Back!</Text>
+        <View>
+          <Text style={styles.textBig}>Welcome Back!</Text>
+        </View>
+        <TouchableOpacity>
+          <TextInput
+            style={{height: 40, borderWidth: 1, width: 300, margin: 10, padding: 5}}
+            placeholder="Enter your username"
+            onChangeText={(text) => this.setState({username: text})}
+          />
+          <TextInput
+            style={{height: 40, borderWidth: 1, width: 300, margin: 10, padding: 5}}
+            secureTextEntry={true}
+            placeholder="Enter your password"
+            onChangeText={(text) => this.setState({password: text})}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, styles.buttonRed]} onPress={() => {this.submitInfo()}}>
+          <Text style={styles.buttonLabel}>Login</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity>
-      <TextInput
-        style={{height: 40, borderWidth: 1, width: 300, margin: 10, padding: 5}}
-        placeholder="Enter your username"
-        onChangeText={(text) => this.setState({username: text})}
-      />
-      <TextInput
-        style={{height: 40, borderWidth: 1, width: 300, margin: 10, padding: 5}}
-        secureTextEntry={true}
-        placeholder="Enter your password"
-        onChangeText={(text) => this.setState({password: text})}
-      />
-    </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, styles.buttonRed]} onPress={() => {this.submitInfo()}}>
-        <Text style={styles.buttonLabel}>Login</Text>
-      </TouchableOpacity>
-    </View>
     )
   }
 }
@@ -168,63 +156,79 @@ class UserList extends React.Component {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     this.state = {
       dataSource: ds.cloneWithRows([]),
+      name: 'loading...'
     }
   }
 
 
-    componentDidMount() {
-      fetch('https://hohoho-backend.herokuapp.com/users', {
-        method: 'GET',
-      })
-      .then((response) => response.json())
-      .then((respJson) =>{
-        console.log(respJson);
-        const filtered = respJson.users.slice(1);
-        return filtered;
-      })
-      .then((responseJson) => {
-        const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-        this.setState ({
-          dataSource: ds.cloneWithRows(responseJson)
-        })
-      })
-      .catch((err) => {
-        alert('Error: ', err)
-      });
-    }
+  componentDidMount() {
+    var self = this;
 
-    touchUser(user) {
-      fetch('https://hohoho-backend.herokuapp.com/messages', {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          to: user._id
-        })
+    socket.on('loadUsers', (user)=>{
+      console.log('IN LOAD USERS: ', user)
+      self.setState({
+        name: user.Username
       })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        if (responseJson.success){
-          alert(`Your Ho Ho Ho! to ${user.username} has been sent!`, [{text: 'Dismiss'}])
-        } else {
-          alert(`Your Ho Ho Ho! to ${user.username} could not be sent.`, [{text: 'Dismiss'}])
-        }
-      })
-      .catch((err) => {
-        alert('Error: ', err)
-      });
-    }
-
-    messages(){
-      this.props.navigation.navigate('Messages')
-    }
-
-    componentDidMount() {
-      this.props.navigation.setParams({
-      // onRightPress: {this.messages.bind(this)}
     })
+    socket.emit('getBets', {})
+    socket.on('loadBets', (bets)=>{
+      const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+      this.setState ({
+        dataSource: ds.cloneWithRows(bets)
+      })
+    })
+    // fetch('https://hohoho-backend.herokuapp.com/users', {
+    //   method: 'GET',
+    // })
+    // .then((response) => response.json())
+    // .then((respJson) =>{
+    //   console.log(respJson);
+    //   const filtered = respJson.users.slice(1);
+    //   return filtered;
+    // })
+    // .then((responseJson) => {
+    //   const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+    //   this.setState ({
+    //     dataSource: ds.cloneWithRows(responseJson)
+    //   })
+    // })
+    // .catch((err) => {
+    //   alert('Error: ', err)
+    // });
   }
+
+  touchUser(user) {
+    fetch('https://hohoho-backend.herokuapp.com/messages', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        to: user._id
+      })
+    })
+    .then((response) => response.json())
+    .then((responseJson) => {
+      if (responseJson.success){
+        alert(`Your Ho Ho Ho! to ${user.username} has been sent!`, [{text: 'Dismiss'}])
+      } else {
+        alert(`Your Ho Ho Ho! to ${user.username} could not be sent.`, [{text: 'Dismiss'}])
+      }
+    })
+    .catch((err) => {
+      alert('Error: ', err)
+    });
+  }
+
+  messages(){
+    this.props.navigation.navigate('Messages')
+  }
+  //
+  // componentDidMount() {
+  //   this.props.navigation.setParams({
+  //     // onRightPress: {this.messages.bind(this)}
+  //   })
+  // }
 
   static navigationOptions = ({ navigation }) => ({
     title: 'UserList',
@@ -235,6 +239,7 @@ class UserList extends React.Component {
   render() {
     return (
       <View style={styles.container}>
+        <Text>{this.state.name}</Text>
         <ListView
           enableEmptySections={true}
           dataSource={this.state.dataSource}
@@ -246,55 +251,55 @@ class UserList extends React.Component {
   }
 }
 
-  class Messages extends React.Component {
-    constructor(props) {
-      super(props)
+class Messages extends React.Component {
+  constructor(props) {
+    super(props)
+    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+    this.state = {
+      dataSource: ds.cloneWithRows([])
+    }
+  }
+
+  static navigationOptions = {
+    title: 'Messages'
+  };
+
+  componentDidMount() {
+    fetch('https://hohoho-backend.herokuapp.com/users', {
+      method: 'GET'
+    })
+    .then((response) => response.json())
+    .then((respJson) =>{
+      console.log(respJson);
+      const filtered = respJson.users.slice(1);
+      return filtered;
+    })
+    .then((responseJson) => {
       const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-      this.state = {
-        dataSource: ds.cloneWithRows([])
-      }
-    }
-
-    static navigationOptions = {
-      title: 'Messages'
-    };
-
-    componentDidMount() {
-      fetch('https://hohoho-backend.herokuapp.com/users', {
-        method: 'GET'
+      this.setState ({
+        dataSource: ds.cloneWithRows(responseJson)
       })
-      .then((response) => response.json())
-      .then((respJson) =>{
-        console.log(respJson);
-        const filtered = respJson.users.slice(1);
-        return filtered;
-      })
-      .then((responseJson) => {
-        const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-        this.setState ({
-          dataSource: ds.cloneWithRows(responseJson)
-        })
-      })
-      .catch((err) => {
-        alert('Error: ', err)
-      });
-    }
+    })
+    .catch((err) => {
+      alert('Error: ', err)
+    });
+  }
 
-    render() {
-      return (
-        <View style={styles.container}>
-          <ListView
-            enableEmptySections={true}
-            dataSource={this.state.dataSource}
-            //Username of each user
-            renderRow={(rowData) =>
-              <Text
-                key={rowData._id}
-                style={{borderWidth: 1, margin: 5, padding: 5}}>
-                From: {aMessage.from.username},
-                To: {aMessage.to.username},
-                Time: {aMessage.timestamp},
-              </Text>}
+  render() {
+    return (
+      <View style={styles.container}>
+        <ListView
+          enableEmptySections={true}
+          dataSource={this.state.dataSource}
+          //Username of each user
+          renderRow={(rowData) =>
+            <Text
+              key={rowData._id}
+              style={{borderWidth: 1, margin: 5, padding: 5}}>
+              From: {aMessage.from.username},
+              To: {aMessage.to.username},
+              Time: {aMessage.timestamp},
+            </Text>}
           />
         </View>
       )
@@ -303,77 +308,77 @@ class UserList extends React.Component {
 
 
 
-//Navigator
-export default StackNavigator({
-  Welcome: {
-    screen: LoginScreen,
-  },
-  Register: {
-    screen: RegisterScreen,
-  },
-  Login: {
-    screen: Login,
-  },
-  UserList: {
-    screen: UserList,
-  },
-  Messages: {
-    screen: Messages,
-  },
-}, {initialRouteName: 'Welcome'});
+  //Navigator
+  export default StackNavigator({
+    Welcome: {
+      screen: WelcomeScreen,
+    },
+    Register: {
+      screen: RegisterScreen,
+    },
+    Login: {
+      screen: Login,
+    },
+    UserList: {
+      screen: UserList,
+    },
+    Messages: {
+      screen: Messages,
+    },
+  }, {initialRouteName: 'Welcome'});
 
 
-//Styles
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#adad85',
-  },
-  containerFull: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'stretch',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-  textBig: {
-    fontSize: 36,
-    textAlign: 'center',
-    margin: 10,
-    color: '#7300e6',
-  },
-  button: {
-    alignSelf: 'stretch',
-    paddingTop: 10,
-    paddingBottom: 10,
-    marginTop: 10,
-    marginLeft: 5,
-    marginRight: 5,
-    borderRadius: 5
-  },
-  buttonRed: {
-    backgroundColor: '#FF585B',
-  },
-  buttonBlue: {
-    backgroundColor: '#0074D9',
-  },
-  buttonGreen: {
-    backgroundColor: '#2ECC40'
-  },
-  buttonLabel: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: 'white'
-  }
-});
+  //Styles
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#00ff00',
+    },
+    containerFull: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'stretch',
+      backgroundColor: '#F5FCFF',
+    },
+    welcome: {
+      fontSize: 20,
+      textAlign: 'center',
+      margin: 10,
+    },
+    instructions: {
+      textAlign: 'center',
+      color: '#333333',
+      marginBottom: 5,
+    },
+    textBig: {
+      fontSize: 36,
+      textAlign: 'center',
+      margin: 10,
+      color: '#ff00ff',
+    },
+    button: {
+      alignSelf: 'stretch',
+      paddingTop: 10,
+      paddingBottom: 10,
+      marginTop: 10,
+      marginLeft: 5,
+      marginRight: 5,
+      borderRadius: 5
+    },
+    buttonRed: {
+      backgroundColor: '#FF585B',
+    },
+    buttonBlue: {
+      backgroundColor: '#0074D9',
+    },
+    buttonGreen: {
+      backgroundColor: 'black'
+    },
+    buttonLabel: {
+      textAlign: 'center',
+      fontSize: 16,
+      color: 'white'
+    }
+  });

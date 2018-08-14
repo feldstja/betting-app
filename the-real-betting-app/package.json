@@ -9,10 +9,19 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
     "expo": "^29.0.0",
     "expo-cli": "^1.1.0-beta.5",
+    "express": "^4.16.3",
+    "http": "0.0.0",
+    "mongoose": "^5.2.7",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
     "react": "16.3.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-29.0.0.tar.gz",
-    "react-navigation": "^1.2.1"
+    "react-navigation": "^1.2.1",
+    "socket.io": "^2.1.1",
+    "socket.io-client": "^2.1.1"
   }
 }
