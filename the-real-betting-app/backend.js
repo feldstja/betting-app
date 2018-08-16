@@ -58,13 +58,13 @@ io.on('connection', (socket) => {
   socket.on('register', (data) => {
     // socket.emit('sup', {})
     data = JSON.parse(data)
-    console.log('HELLLOOOOOOOOOOO')
     User.find({Username: data.Username}, function(err, res){
       if(err) {
         console.log('Error', err);
       } else if (res.length > 0) {
         console.log('User already exists');
       } else if (data.Username && data.Password) {
+        if(data.Password === data.PasswordRepeat){
         const newUser = new User({
           Username: data.Username,
           Password: data.Password,
@@ -79,49 +79,85 @@ io.on('connection', (socket) => {
           }
         });
       }
+    }
     })
   });
 
-  socket.on('login', (data) => {
-    console.log(data)
-    data = JSON.parse(data)
-
-    User.findOne({Username : data.Username}, function(err, res){
-      console.log("USER IS AS FOLLOWS:", res)
-      if(!res){
-        socket.emit('errMsg', {msg: "Incorrect Username"})
-        console.log("Incorrect Username")
-      }
-      else if(res.Password !== data.Password){
-        socket.emit('errMsg', {msg: "Incorrect Password"})
-        console.log("Incorrect Password")
-      }
-      else if(err){
-        console.log(err)
-      }
-      else{
-        socket.user = res;
-        console.log(socket.user)
-        socket.emit('loginSuccess', {});
-        socket.emit('loadUsers', socket.user)
-      }
-    });
+  socket.on('login', ({Username, Password}) => {
+      User.findOne({Username}).then(user => {
+        console.log(user)
+        if(!user) {
+          socket.emit('errMsg', {msg: "There is no user"})
+          console.log("Incorrect Username")
+        }
+        if(user.Password !== Password) {
+          socket.emit('errMsg', {msg: "Incorrect Password"})
+          console.log("Incorrect Password")
+        }
+        socket.user = user;
+        socket.emit('loginSuccess', user);
+      })
   })
-
 
   socket.on('getBets', (data) => {
     Bets.find((err, bets)=>{
       if(err){
         console.log("ERR:", err)
       } else if(!bets.length){
-        console.log("BETS1111:", bets)
-
-        socket.emit('loadBets', [{username: 'hi'}])
+        var theBets= [{Text: 'saquon barkley will rush for 115 yards', Amount: 20, Odds: 1,  Creator: 'Sup'}]
+        socket.emit('loadBets', theBets)
       } else {
-        console.log("BETS22222:", bets)
       socket.emit('loadBets', bets)
     }
     })
+  })
+
+  socket.on('addBet', (data)=>{
+      data = JSON.parse(data)
+
+        const newBet = new Bets({
+          Text: data.text,
+          Amount: data.amount,
+          Odds: data.odds,
+          Creator: data.creator
+        });
+        newBet.save((err, bet) => {
+          if (err) {
+            console.log("EROOROROORORO:", err);
+          } else {
+            console.log('User Saved');
+            socket.emit('betSaved', {success: true, data: bet});
+          }
+        });
+  })
+
+  socket.on('leaderboard', ()=>{
+    User.find((err, users)=>{
+      if(err){
+        console.log("ERR:", err)
+      } else {
+        //sort the users
+        users = users.sort((a,b)=>{b.coins - a.coins})
+      socket.emit('leaders', users)
+    }
+    })
+  })
+
+  socket.on('getProfBets', (user) => {
+    Bets.find({Creator: user.Username}, (err, bets)=>{
+      if(err){
+        console.log("ERR:", err)
+      } else if(!bets.length){
+        var theBets= [{Text: 'saquon barkley will rush for 115 yards', Amount: 20, Odds: 1,  Creator: 'Sup'}]
+        socket.emit('loadProfBets', theBets)
+      } else {
+       socket.emit('loadProfBets', bets)
+    }
+    })
+  })
+
+  socket.on('changePage', (user)=>{
+    socket.emit('loadPage', user)
   })
 })
 
@@ -176,7 +212,6 @@ io.on('connection', (socket) => {
 //         }
 //       })
 //     })
-
 // });
 //
 
