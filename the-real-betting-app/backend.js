@@ -114,7 +114,6 @@ io.on('connection', (socket) => {
 
   socket.on('addBet', (data)=>{
     data = JSON.parse(data)
-
     const newBet = new Bets({
       Text: data.text,
       Amount: data.amount,
@@ -139,7 +138,13 @@ io.on('connection', (socket) => {
         console.log("ERR:", err)
       } else {
         //sort the users
-        users = users.sort((a,b)=>{b.coins - a.coins})
+        for (var i = 1; i < users.length; i++)
+            for (var j = 0; j < i; j++)
+                if (users[i].Coins > users[j].Coins) {
+                  var x = users[i].Coins;
+                  users[i].Coins = users[j].Coins;
+                  users[j].Coins = x;
+                }
         socket.emit('leaders', users)
       }
     })
@@ -167,13 +172,12 @@ io.on('connection', (socket) => {
 
 
     socket.on('joinBet', (data)=>{
-      console.log("HI THERE")
       Bets.findByIdAndUpdate(data.bet._id, {
         Opponent: data.user.Username
       })
       .then(theBet=>{
-        console.log(theBet)
       })
+      socket.emit('betJoined', data)
     })
 
     socket.on('wonBet', (data)=>{
@@ -195,7 +199,7 @@ io.on('connection', (socket) => {
             User.findOne({Username: data.bet.Opponent})
             .then((opponent)=>{
               User.findByIdAndUpdate(opponent._id, {
-                Coins: (data.user.Coins - theBet.Amount)
+                Coins: (opponent.Coins - theBet.Amount)
               })
               .then((opp)=>{
                 console.log(opp)
@@ -225,7 +229,7 @@ io.on('connection', (socket) => {
             User.findBy({Username: data.bet.Opponent})
             .then((opponent)=>{
               User.findByIdAndUpdate(opponent._id, {
-                Coins: (data.user.Coins + theBet.Amount)
+                Coins: (opponent.Coins + theBet.Amount)
               })
               .then((opp)=>{
                 console.log(opp)

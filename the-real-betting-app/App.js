@@ -3,8 +3,9 @@ import React from 'react';
 import { StyleSheet, View, Text, Animated, TouchableOpacity, AsyncStorage, TextInput, ListView, Alert, Image, Button } from 'react-native';
 import { StackNavigator } from 'react-navigation';
 import io from 'socket.io-client';
-const socket = io('https://47d0e64f.ngrok.io');
+const socket = io('https://70028b0e.ngrok.io');
 let newLogin;
+
   class WelcomeScreen extends React.Component {
     static navigationOptions = {
       title: 'Welcome',
@@ -101,11 +102,12 @@ let newLogin;
         Username: this.state.username,
         Password: this.state.password,
         PasswordRepeat: this.state.passwordRepeat
-      }, (data)=>{
-        if(data.success){
-          this.props.navigation.navigate('Welcome')
-        }
-      }) )
+      }))
+        socket.on('registerSuccess', data => {
+          if (data.success) {
+            this.props.navigation.navigate('Welcome')
+          }
+        })
     }
 
     render() {
@@ -137,7 +139,7 @@ let newLogin;
               onChangeText={(text) => this.setState({passwordRepeat: text})}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.buttonFinal, styles.buttonRed]} onPress={() => {this.submitInfo()}}>
+          <TouchableOpacity style={[styles.buttonFinal, styles.buttonBlack]} onPress={() => {this.submitInfo()}}>
             <Text style={styles.buttonLabel}>Register</Text>
           </TouchableOpacity>
           <Image source={{uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/5d/Columbus_Blue_Jackets_logo.svg/1200px-Columbus_Blue_Jackets_logo.svg.png'}}
@@ -295,12 +297,15 @@ let newLogin;
         onRightPress: self.Leaderboard.bind(this),
         onLeftPress: self.newLogin.bind(this)
       })
+      socket.on('betJoined', (data) => {
+        data.bet.Opponent = data.user.Username
+      })
     }
 
 
     newBet(){
-      this.props.navigation.navigate('NewBet')
       socket.emit('changePage', this.state.user)
+      this.props.navigation.navigate('NewBet')
     }
     Leaderboard(){
       socket.emit('changePage', this.state.user)
@@ -312,7 +317,6 @@ let newLogin;
     }
 
     TakeBet(theBet){
-      console.log('hey')
       socket.emit('joinBet', {user: this.state.user, bet: theBet})
     }
 
@@ -329,7 +333,6 @@ let newLogin;
 
     render() {
       var self = this
-      console.log("USER IN RENDER ", self.state.user)
       return (
         <View style={styles.container}>
           <Text style={{fontSize: 20}}>{self.state.user.Username} ---  {this.state.coins}</Text>
@@ -337,7 +340,7 @@ let newLogin;
             enableEmptySections={true}
             dataSource={this.state.dataSource}
             //Username of each user
-            renderRow={(rowData) => <View style={{borderWidth: 1, flex: 1, margin: 5, padding: 5}}>
+            renderRow={(rowData) => <View style={{borderWidth: 1, flex: 1, margin: 5, padding: 5, backgroundColor: 'white'}}>
               <Text key={rowData._id}>{rowData.Text}</Text>
               <Text>{rowData.Amount} Coins</Text>
               <Text>{rowData.Creator}</Text>
@@ -347,7 +350,7 @@ let newLogin;
               </TouchableOpacity>
               : <Text>BET TAKEN ALREADY</Text>}
             </View>}
-            />
+          />
             <TouchableOpacity onPress={()=>{this.newBet()}} style={[styles.buttonFinal, styles.buttonBlack, {marginBottom: 10}]}>
               <Text style={styles.buttonLabel}>Create New Bet</Text>
             </TouchableOpacity>
@@ -382,13 +385,14 @@ let newLogin;
         })
       })
     }
+
     submit() {
       socket.emit('addBet', JSON.stringify({
         text: this.state.text,
         amount: this.state.amount,
         odds: this.state.odds,
         creator: this.state.user.Username
-      }) )
+      }))
       socket.on('betSaved', (data)=>{
         socket.emit('changePage', this.state.user)
         this.props.navigation.navigate('Bets')
@@ -401,16 +405,16 @@ let newLogin;
           {this.state.user ?    <Text style={{fontSize: 20}}>{this.state.user.Username} ---  {this.state.user.Coins}</Text>
           : <Text>Loading...</Text>}
           <TextInput
-            style={[styles.textBox, {marginTop: 10}]}
+            style={[styles.textBox, {marginTop: 10, backgroundColor: 'white'}]}
             placeholder="Enter Your Bet"
             onChangeText={(text) => this.setState({text: text})}
           />
           <TextInput
-            style={styles.textBox}
+            style={[styles.textBox, {backgroundColor: 'white'}]}
             placeholder="Enter The Amount You Want To Bet"
             onChangeText={(text) => this.setState({amount: Number(text)})}
           />
-          <TouchableOpacity onPress={()=>{this.submit.bind(this)}} style={[styles.buttonFinal, styles.buttonBlack]}>
+          <TouchableOpacity onPress={()=>{this.submit()}} style={[styles.buttonFinal, styles.buttonBlack]}>
             <Text style={styles.buttonLabel}>Submit</Text>
           </TouchableOpacity>
           <Image source={{uri: 'https://www.adweek.com/tvnewser/wp-content/uploads/sites/3/2016/05/EI_55388_23989_41639b1e7498a68-660x400.jpg'}}
@@ -451,9 +455,10 @@ let newLogin;
           enableEmptySections={true}
           dataSource={this.state.dataSource}
           //Username of each user
-          renderRow={(rowData) => <View key={rowData._id} style={{borderColor: 'black', borderWidth: 1, flex: 1, margin: 5, padding: 5}}>
-            <Text >{rowData.Username}</Text>
-            <Text>{rowData.Coins}</Text>
+          renderRow={(rowData) => <View style={{borderColor: 'black', borderWidth: 1, margin: 5, padding: 5, backgroundColor: 'white'}}>
+            <Text> {rowData.Text}</Text>
+            <Text >{rowData.Username}: {rowData.Coins} Coins</Text>
+            <Text key={rowData._id}> {rowData.Text}</Text>
           </View>}
           />
         </View>
@@ -519,13 +524,13 @@ let newLogin;
         <TouchableOpacity onPress={ () => {this.allBets()} } style={[styles.buttonFinal, styles.buttonBlack]}>
           <Text style={styles.buttonLabel}>Back to all bets</Text>
         </TouchableOpacity>
-        {this.state.user ? <Text style={{marginTop: 20, fontSize: 36}}>{this.state.user.Username} --- {this.state.user.Coins}</Text>
+        {this.state.user ? <Text style={{marginTop: 20, fontSize: 36, flex: 1}}>{this.state.user.Username} --- {this.state.user.Coins}</Text>
         : <Text style={{marginTop: 20, fontSize: 36}}>Loading...</Text>}
         <ListView
           enableEmptySections={true}
           dataSource={this.state.dataSource}
           //Username of each user
-          renderRow={(rowData) => <View style={{borderWidth: 1, flex: 1, margin: 5, padding: 5}}>
+          renderRow={(rowData) => <View style={{borderWidth: 1, flex: 1, margin: 5, padding: 5, backgroundColor: 'white'}}>
             <Text key={rowData._id}>{rowData.Text}</Text>
             <Text>{rowData.Amount}</Text>
             <Text>{rowData.Odds}</Text>
