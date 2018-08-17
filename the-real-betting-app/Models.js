@@ -32,7 +32,15 @@ const BetSchema = new mongoose.Schema({
   Creator: {
     type: String,
     required: true
-  }
+  },
+  Opponent: {
+    type: String,
+    required: true
+  },
+  CreatorWon: {
+    type: Number,
+    required: true
+  },
 })
 
 // module.exports = mongoose.model('User', UserSchema);

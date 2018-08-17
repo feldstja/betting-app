@@ -3,9 +3,8 @@ import React from 'react';
 import { StyleSheet, View, Text, Animated, TouchableOpacity, AsyncStorage, TextInput, ListView, Alert, Image, Button } from 'react-native';
 import { StackNavigator } from 'react-navigation';
 import io from 'socket.io-client';
-const socket = io('https://2b3f7497.ngrok.io');
+const socket = io('https://47d0e64f.ngrok.io');
 let newLogin;
-
   class WelcomeScreen extends React.Component {
     static navigationOptions = {
       title: 'Welcome',
@@ -16,6 +15,7 @@ let newLogin;
     }
 
     componentDidMount(){
+
       Animated.loop(
         Animated.timing(                  // Animate over time
           this.state.fadeAnim,            // The animated value to drive
@@ -60,8 +60,8 @@ let newLogin;
           </View>
 
           <View style={{marginTop: 35}}>
-            <Text style={styles.textBig}>Welcome to LongShot!</Text>
-            <TouchableOpacity onPress={ () => {this.press()} } style={[styles.button, styles.buttonGreen]}>
+            <Text style={styles.textBigs}>Welcome to LongShot!</Text>
+            <TouchableOpacity onPress={ () => {this.press()} } style={[styles.button, styles.buttonBlack]}>
               <Text style={styles.buttonLabel}>Get to Gamblin'!</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.button, styles.buttonBlue]} onPress={ () => {this.register()} }>
@@ -112,7 +112,7 @@ let newLogin;
       return (
         <View style={styles.container}>
           <View>
-            <Text style={styles.textBig}>Register</Text>
+            <Text style={styles.textBigs}>Register</Text>
           </View>
           <TouchableOpacity>
             <TextInput
@@ -137,9 +137,15 @@ let newLogin;
               onChangeText={(text) => this.setState({passwordRepeat: text})}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.buttonRed]} onPress={() => {this.submitInfo()}}>
+          <TouchableOpacity style={[styles.buttonFinal, styles.buttonRed]} onPress={() => {this.submitInfo()}}>
             <Text style={styles.buttonLabel}>Register</Text>
           </TouchableOpacity>
+          <Image source={{uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/5d/Columbus_Blue_Jackets_logo.svg/1200px-Columbus_Blue_Jackets_logo.svg.png'}}
+          style={{width: 150, height: 150, marginRight: 70, marginTop: 30}} />
+          <Image source={{uri: 'http://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/2384.png&w=350&h=254'}}
+          style={{width: 75, height: 75, marginLeft: 40, marginTop: 10}} />
+          <Image source={{uri: 'https://i.pinimg.com/236x/c8/73/ba/c873ba10e928b99be94760d2bd56de73--sports-graphics-school-football.jpg'}}
+          style={{width: 105, height: 130, marginLeft: 100, marginTop: 10}} />
         </View>
       )
     }
@@ -165,7 +171,7 @@ let newLogin;
       var self = this;
       socket.on('loginSuccess', async data => {
         await self.setState({user: data});
-        await AsyncStorage.setItem('user', JSON.stringify(data));
+        await AsyncStorage.setItem("user", JSON.stringify(data));
         socket.emit('changePage', this.state.user)
         self.props.navigation.navigate('Bets')
       });
@@ -212,7 +218,7 @@ let newLogin;
       return (
         <View style={styles.container}>
           <View>
-            <Text style={styles.textBig}>Welcome Back!</Text>
+            <Text style={styles.textBigs}>Welcome Back!</Text>
           </View>
           <TouchableOpacity>
             <TextInput
@@ -227,9 +233,13 @@ let newLogin;
               onChangeText={(text) => this.setState({password: text})}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.buttonRed]} onPress={() => {this.submitInfo()}}>
+          <TouchableOpacity style={[styles.buttonFinal, styles.buttonBlack]} onPress={() => {this.submitInfo()}}>
             <Text style={styles.buttonLabel}>Login</Text>
           </TouchableOpacity>
+          <Image source={{uri: 'https://media.giphy.com/media/yP6OztYXzgyM8/giphy.gif'}}
+          style={{width: 220, height: 170, marginRight: 50, marginTop: 30}} />
+          <Image source={{uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReSHDFBGrvzjuseSouI71tz0eHLIln1hwSV-V6MG31VN2DR_wLRQ'}}
+          style={{width: 250, height: 140, marginRight: 50, marginTop: 30}} />
         </View>
       )
     }
@@ -262,14 +272,16 @@ let newLogin;
       const user = await AsyncStorage.getItem("user")
       var self = this;
       if(user){
-        this.setState({
+        self.setState({
           user: user
         })
+        console.log("USER IN DATA:", user)
       }
       socket.on('loadPage', (user)=>{
         self.setState({
           name: user.Username,
           coins: user.Coins,
+          user: user
         })
       })
       socket.emit('getBets', {})
@@ -287,25 +299,22 @@ let newLogin;
 
 
     newBet(){
-      socket.emit('changePage', this.state.user)
       this.props.navigation.navigate('NewBet')
-
+      socket.emit('changePage', this.state.user)
     }
     Leaderboard(){
       socket.emit('changePage', this.state.user)
       this.props.navigation.navigate('Leaderboard')
-
     }
     Profile(){
       socket.emit('changePage', this.state.user)
       this.props.navigation.navigate('Profile')
     }
-    //
-    // componentDidMount() {
-    //   this.props.navigation.setParams({
-    //     // onRightPress: {this.messages.bind(this)}
-    //   })
-    // }
+
+    TakeBet(theBet){
+      console.log('hey')
+      socket.emit('joinBet', {user: this.state.user, bet: theBet})
+    }
 
     static navigationOptions = ({ navigation }) => ({
       title: 'Bets',
@@ -319,23 +328,30 @@ let newLogin;
 
 
     render() {
+      var self = this
+      console.log("USER IN RENDER ", self.state.user)
       return (
         <View style={styles.container}>
-          <Text style={{fontSize: 20}}>{this.state.name} ---  {this.state.coins}</Text>
+          <Text style={{fontSize: 20}}>{self.state.user.Username} ---  {this.state.coins}</Text>
           <ListView
             enableEmptySections={true}
             dataSource={this.state.dataSource}
             //Username of each user
             renderRow={(rowData) => <View style={{borderWidth: 1, flex: 1, margin: 5, padding: 5}}>
               <Text key={rowData._id}>{rowData.Text}</Text>
-              <Text>{rowData.Amount}</Text>
-              <Text>{rowData.Odds}</Text>
-              <Text>{rowData.Creator}</Text></View>}
+              <Text>{rowData.Amount} Coins</Text>
+              <Text>{rowData.Creator}</Text>
+              {(rowData.Opponent === "none") ?
+              <TouchableOpacity style={[styles.button, styles.buttonBlue]} onPress={() => {this.TakeBet(rowData)}}>
+                <Text style={styles.buttonLabel}>Bet</Text>
+              </TouchableOpacity>
+              : <Text>BET TAKEN ALREADY</Text>}
+            </View>}
             />
-            <TouchableOpacity onPress={()=>{this.newBet()}} style={[styles.button, styles.buttonGreen, {marginBottom: 10}]}>
+            <TouchableOpacity onPress={()=>{this.newBet()}} style={[styles.buttonFinal, styles.buttonBlack, {marginBottom: 10}]}>
               <Text style={styles.buttonLabel}>Create New Bet</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=>{this.Profile()}} style={[styles.button, styles.buttonRed, {marginBottom: 30}]}>
+            <TouchableOpacity onPress={()=>{this.Profile()}} style={[styles.buttonFinal, styles.buttonBlue, {marginBottom: 30}]}>
               <Text style={styles.buttonLabel}>Your Profile</Text>
             </TouchableOpacity>
           </View>
@@ -365,24 +381,6 @@ let newLogin;
           user: user
         })
       })
-      // fetch('https://hohoho-backend.herokuapp.com/users', {
-      //   method: 'GET'
-      // })
-      // .then((response) => response.json())
-      // .then((respJson) =>{
-      //   console.log(respJson);
-      //   const filtered = respJson.users.slice(1);
-      //   return filtered;
-      // })
-      // .then((responseJson) => {
-      //   const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-      //   this.setState ({
-      //     dataSource: ds.cloneWithRows(responseJson)
-      //   })
-      // })
-      // .catch((err) => {
-      //   alert('Error: ', err)
-      // });
     }
     submit() {
       socket.emit('addBet', JSON.stringify({
@@ -400,9 +398,10 @@ let newLogin;
     render() {
       return (
         <View style={styles.container}>
-          {this.state.user ? <Text>{this.state.user.Username}</Text> : <Text>Loading...</Text>}
+          {this.state.user ?    <Text style={{fontSize: 20}}>{this.state.user.Username} ---  {this.state.user.Coins}</Text>
+          : <Text>Loading...</Text>}
           <TextInput
-            style={styles.textBox}
+            style={[styles.textBox, {marginTop: 10}]}
             placeholder="Enter Your Bet"
             onChangeText={(text) => this.setState({text: text})}
           />
@@ -411,12 +410,16 @@ let newLogin;
             placeholder="Enter The Amount You Want To Bet"
             onChangeText={(text) => this.setState({amount: Number(text)})}
           />
-          <TextInput
-            style={styles.textBox}
-            placeholder="Enter The Odds You Want To Make"
-            onChangeText={(text) => this.setState({odds: Number(text)})}
-          />
-          <Button title='Submit' onPress={this.submit.bind(this)}/>
+          <TouchableOpacity onPress={()=>{this.submit.bind(this)}} style={[styles.buttonFinal, styles.buttonBlack]}>
+            <Text style={styles.buttonLabel}>Submit</Text>
+          </TouchableOpacity>
+          <Image source={{uri: 'https://www.adweek.com/tvnewser/wp-content/uploads/sites/3/2016/05/EI_55388_23989_41639b1e7498a68-660x400.jpg'}}
+          style={{width: 200, height: 200, marginRight: 50, marginTop: 30}} />
+          <Image source={{uri: 'http://dialogusci.info/wp-content/uploads/2018/06/jackie-robinson-quotes-jackie-robinson-quotes-life-is-not-a-spectator-sport.jpg'}}
+          style={{width: 300, height: 130, marginRight: 70, marginTop: 50,  transform:[{rotate: '45 deg'}]}} />
+
+          <Image source={{uri: 'http://www.booshsports.com/wp-content/uploads/2014/12/fights-FEATURED.jpg'}}
+          style={{width: 130, height: 100, marginLeft: 150,}} />
         </View>
       )
     }
@@ -482,12 +485,42 @@ let newLogin;
           dataSource: ds.cloneWithRows(bets)
         })
       })
+      socket.on('updatedUser', (theUser)=>{
+        self.setState({
+          user: theUser
+        })
+      })
     }
+
+    allBets(){
+      this.props.navigation.navigate('Bets')
+      socket.emit('changePage', this.state.user)
+    }
+
+    lostBet(bet){
+      socket.emit('lostBet', {
+        user: this.state.user,
+        bet: bet,
+      })
+    }
+
+    wonBet(bet){
+      console.log('hey')
+      socket.emit('wonBet', {
+        user: this.state.user,
+        bet: bet,
+      })
+    }
+
 
     render() {
       return (
         <View style={styles.container}>
-        {this.state.user ? <Text>{this.state.user.Username} --- {this.state.user.Coins}</Text> : <Text>Loading...</Text>}
+        <TouchableOpacity onPress={ () => {this.allBets()} } style={[styles.buttonFinal, styles.buttonBlack]}>
+          <Text style={styles.buttonLabel}>Back to all bets</Text>
+        </TouchableOpacity>
+        {this.state.user ? <Text style={{marginTop: 20, fontSize: 36}}>{this.state.user.Username} --- {this.state.user.Coins}</Text>
+        : <Text style={{marginTop: 20, fontSize: 36}}>Loading...</Text>}
         <ListView
           enableEmptySections={true}
           dataSource={this.state.dataSource}
@@ -496,7 +529,19 @@ let newLogin;
             <Text key={rowData._id}>{rowData.Text}</Text>
             <Text>{rowData.Amount}</Text>
             <Text>{rowData.Odds}</Text>
-            <Text>{rowData.Creator}</Text></View>}
+            <Text>{rowData.Creator}</Text>
+            {(rowData.CreatorWon === 0) ?
+              <View>
+            <TouchableOpacity onPress={ () => {this.wonBet(rowData)}} style={[styles.button, styles.buttonBlue]}>
+              <Text style={styles.buttonLabel}>WON BET</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={ () => {this.lostBet(rowData)} } style={[styles.button, styles.buttonBlack]}>
+              <Text style={styles.buttonLabel}>LOST BET</Text>
+            </TouchableOpacity>
+            </View>
+            : (rowData.CreatorWon === 1) ? <Text>YOU LOST</Text>: <Text>YOU WON</Text>
+          }
+          </View>}
           />
        </View>
       )
@@ -574,6 +619,13 @@ let newLogin;
         textAlign: 'center',
         margin: 10,
         color: '#11f7ef',
+        backgroundColor: 'white',
+      },
+      textBigs: {
+        fontSize: 36,
+        textAlign: 'center',
+        margin: 10,
+        color: '#11f7ef',
       },
       button: {
         alignSelf: 'stretch',
@@ -582,7 +634,9 @@ let newLogin;
         marginTop: 10,
         marginLeft: 5,
         marginRight: 5,
-        borderRadius: 5
+        borderRadius: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
       },
       buttonRed: {
         backgroundColor: '#FF585B',
@@ -590,12 +644,26 @@ let newLogin;
       buttonBlue: {
         backgroundColor: '#0074D9',
       },
-      buttonGreen: {
+      buttonBlack: {
         backgroundColor: 'black'
       },
       buttonLabel: {
         textAlign: 'center',
         fontSize: 16,
-        color: 'white'
-      }
+        color: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 300
+      },
+      buttonFinal: {
+        paddingTop: 10,
+        paddingBottom: 10,
+        marginTop: 10,
+        marginLeft: 5,
+        marginRight: 5,
+        borderRadius: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 300
+      },
     });
