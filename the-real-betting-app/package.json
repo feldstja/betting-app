@@ -9,7 +9,7 @@
     "eject": "expo eject"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "body-parser": "^1.18.3",
     "expo": "^29.0.0",
     "expo-cli": "^1.1.0-beta.5",
