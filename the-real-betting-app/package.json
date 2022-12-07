@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "body-parser": "^1.18.3",
+    "body-parser": "^1.20.1",
     "expo": "^29.0.0",
-    "expo-cli": "^1.1.0-beta.5",
-    "express": "^4.16.3",
+    "expo-cli": "^6.0.8",
+    "express": "^4.18.2",
     "http": "0.0.0",
     "localStorage": "^1.0.3",
     "mongoose": "^5.2.7",
